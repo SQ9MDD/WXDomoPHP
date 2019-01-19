@@ -20,6 +20,7 @@ $lat			= '5215.01N';			// coordinates APRS format			//
 $lon			= '02055.58E';			// coordinates APRS format			//
 $ip				= '10.9.48.3';			// domoticz IP adress				//
 $temp_idx		= '246';				// Temp sensor IDX					//
+$tempi_idx		= '242';				// inside temperature				//
 $humi_idx		= '246';				// Humidity sensor IDX				//
 $baro_idx		= '241';				// Baromether  IDX					//
 ///////////////// DO NOTE EDIT BELLOW THIS LINE //////////////////////////////
@@ -28,16 +29,22 @@ $url = 'http://'.$ip.'/json.htm?type=devices&rid=';
 //data i godzina
 $time = date('mdHi');
 
-// get temp from DOMOTICZ
-$obj_temp 	= file_get_contents($url.$temp_idx);
-$obj_temp_res 	= json_decode($obj_temp,true);
-$temp		= round(($obj_temp_res['result'][0]['Temp']*9/5)+32);
+// get outside temp from DOMOTICZ
+$obj_temp = file_get_contents($url.$temp_idx);
+$obj_temp_res = json_decode($obj_temp,true);
+$temp = round(($obj_temp_res['result'][0]['Temp']*9/5)+32);
 if($temp < 100){
 	$zero = '0';
 }else{
 	$zero = '';
 }
-// get humidity from DOMOTICZ
+
+// get inside temp from DOMOTICZ
+$obj_tempi = file_get_contents($url.$tempi_idx);
+$obj_tempi_res = json_decode($obj_tempi,true);
+$tempi = round($obj_tempi_res['result'][0]['Temp'],1);
+
+// get outside humidity from DOMOTICZ
 $obj_humi = file_get_contents($url.$humi_idx);
 $obj_humi_res = json_decode($obj_humi,true);
 $humi = $obj_humi_res['result'][0]['Humidity'];
@@ -56,7 +63,7 @@ if($baro < 10000){
 }
 
 // print data
-echo "!".$lat."/".$lon."_.../...g...t".$zero.$temp."h".$humi."b".$baro." Test WX DOMOTICZ\n";
+echo "!".$lat."/".$lon."_.../...g...t".$zero.$temp."h".$humi."b".$baro." Int. T: ".$tempi."C  Test WX DOMOTICZ\n";
 
 // EOF
 ?>
