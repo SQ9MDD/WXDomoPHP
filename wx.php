@@ -1,7 +1,8 @@
 #!/usr/bin/php
 <?php
 // DOMOTICZ to APRX WX script
-// SQ9MDD 2019 released under GPL.v.2
+// SQ9MDD@2019 released under GPL.v.2
+// http://sq9mdd.qrz.pl
 //
 // ramka pogodowa bez pozycji
 // _mm dd gg mm		           temp		           hum baro
@@ -12,7 +13,8 @@
 // ! 5215.01N / 02055.58E _ ... / ... g... t030 r000 p000 P000 h00 b10218
 //
 // jesli nie podaje parametru wstawiam kropki
-// temp w fahrenheit F=(C-32)/9*5 lub mniej dokładnie F=(C-30)/2
+// temp z sieci APRSjest w fahrenheit przeliczanie na C =(F-32)/9*5 
+// temp w celsjusz do sieci APRS trzeba wyslac jako fahrenheit F = (C*9/5)+32 
 //
 // zmienne tutaj ustawiasz parametry dostepu do danych  oraz znak i pozycje //
 $callsign		= 'SQ9MDD-4';			// your WX callsign					//
@@ -24,10 +26,16 @@ $tempi_idx		= '242';				// inside temperature				//
 $humi_idx		= '246';				// Humidity sensor IDX				//
 $baro_idx		= '241';				// Baromether  IDX					//
 ///////////////// DO NOTE EDIT BELLOW THIS LINE //////////////////////////////
+
 $url = 'http://'.$ip.'/json.htm?type=devices&rid=';
 
 //data i godzina
 $time = date('mdHi');
+
+// get inside temp from DOMOTICZ
+$obj_tempi = file_get_contents($url.$tempi_idx);
+$obj_tempi_res = json_decode($obj_tempi,true);
+$tempi = round($obj_tempi_res['result'][0]['Temp'],1);
 
 // get outside temp from DOMOTICZ
 $obj_temp = file_get_contents($url.$temp_idx);
@@ -38,11 +46,6 @@ if($temp < 100){
 }else{
 	$zero = '';
 }
-
-// get inside temp from DOMOTICZ
-$obj_tempi = file_get_contents($url.$tempi_idx);
-$obj_tempi_res = json_decode($obj_tempi,true);
-$tempi = round($obj_tempi_res['result'][0]['Temp'],1);
 
 // get outside humidity from DOMOTICZ
 $obj_humi = file_get_contents($url.$humi_idx);
@@ -62,8 +65,8 @@ if($baro < 10000){
 	$bzero = '';
 }
 
-// print data
-echo "!".$lat."/".$lon."_.../...g...t".$zero.$temp."h".$humi."b".$baro." Int. T: ".$tempi."C  Test WX DOMOTICZ\n";
+// print APRS WX data frame without time
+echo "!".$lat."/".$lon."_.../...g...t".$zero.$temp."h".$humi."b".$bzero.$baro." Int. T: ".$tempi."C  Test WX DOMOTICZ\n";
 
 // EOF
 ?>
