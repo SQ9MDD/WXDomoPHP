@@ -51,7 +51,7 @@ if($temp_idx != 0){
    if($temp != ''){
       $temp = round(($temp*9/5)+32);
    }
-   if($temp == 100){
+   if($temp < 100){
       $zero = '0';
    }else{
       $zero = '';
@@ -107,7 +107,7 @@ if($baro != ''){
 if(($temp == '' )){
    echo "!".$lat."/".$lon."_".$err_comment."\n";
 }else{
-   echo "!".$lat."/".$lon."_.../...g...t".$temp_label.$humi_label.$baro_label.$internal_temp_label.$comment."\n";
+   echo "!".$lat."/".$lon."_.../...g...t".$temp_label.$humi_label.$baro_label.$internal_temp_label." ".$comment."\n";
 }
 // EOF
 ?>
