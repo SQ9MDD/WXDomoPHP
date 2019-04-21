@@ -21,10 +21,13 @@ $callsign		= 'SQ9MDD-4';			// your WX callsign		//
 $lat			= '5215.01N';			// coordinates APRS format	//
 $lon			= '02055.58E';			// coordinates APRS format	//
 $ip			= '10.9.48.3';			// domoticz IP adress		//
-$temp_idx		= '246';			// Temp sensor IDX		//
+$temp_idx		= '4';				// Temp sensor IDX		//
 $tempi_idx		= '0';				// inside temperature		//
-$humi_idx		= '246';			// Humidity sensor IDX		//
-$baro_idx		= '241';			// Baromether  IDX		//
+$humi_idx		= '4';				// Humidity sensor IDX		//
+$baro_idx		= '20';				// Baromether  IDX		//
+$pm_25_idx		= '41';				// PM 2.5 sensor IDX		//
+$pm_10_idx		= '42';				// PM 10 sensor IDX		//
+$voltage_batt_idx	= '44';				// Battery voltage sensor	//
 $comment		= 'Domoticz & APRX WX test';	// beacon comment		//
 $err_comment		= 'ERROR NO WX DATA';		// comment if can't connect     //
 ///////////////// DO NOTE EDIT BELLOW THIS LINE //////////////////////////////////////////
@@ -43,15 +46,46 @@ if($tempi_idx != 0){
    $tempi = '';
 }
 
+// get bacup battery voltage
+if($voltage_batt_idx != 0){
+   $obj_batt_v = @file_get_contents($url.$voltage_batt_idx);
+   $obj_batt_res = json_decode($obj_batt_v,true);
+   $bat_voltage = round($obj_batt_res['result'][0]['Voltage'],1);
+   $bat_voltage_label = "Bat:".$bat_voltage."V ";
+}else{
+   $bat_voltage_label = '';
+}
+
+
+// get dust pm_2.5
+if($pm_25_idx != 0){
+  $obj_pm25 = @file_get_contents($url.$pm_25_idx);
+  $obj_pm25_res = json_decode($obj_pm25,true);
+  $pm_25_val = round($obj_pm25_res['result'][0]['Data'],1);
+  $pm25_label = "PM2.5=".$pm_25_val."ug/m3 ";
+}else{
+  $pm_25_val = '';
+  $pm25_label = '';
+}
+
+// get dust pm_10
+if($pm_10_idx != 0){
+  $obj_pm10 = @file_get_contents($url.$pm_10_idx);
+  $obj_pm10_res = json_decode($obj_pm10,true);
+  $pm_10_val = round($obj_pm10_res['result'][0]['Data'],1);
+  $pm10_label = "PM10=".$pm_10_val."ug/m3 ";
+}else{
+  $pm_10_val = '';
+  $pm10_label = '';
+}
+
 // get outside temp from DOMOTICZ
 if($temp_idx != 0){
-   $obj_temp = @file_get_contents($url.$temp_idx);
-   $obj_temp_res = json_decode($obj_temp,true);
+   $obj_temp = file_get_contents($url.$temp_idx);
+   $obj_temp_res = @json_decode($obj_temp,true);
    $temp = $obj_temp_res['result'][0]['Temp'];
-   if($temp != ''){
+   if($temp < 100 and $temp != ''){
       $temp = round(($temp*9/5)+32);
-   }
-   if($temp < 100){
       $zero = '0';
    }else{
       $zero = '';
@@ -73,13 +107,9 @@ if($humi_idx != 0){
 }
 
 // get pressure from DOMOTICZ
-$baro = '';
-$obj_baro = @file_get_contents($url.$baro_idx);
-$obj_baro_res = json_decode($obj_baro,true);
-$baro = @$obj_baro_res['result'][0]['Barometer'];
-if($baro != ''){
-   $baro = $baro * 10;
-}
+$obj_baro	= @file_get_contents($url.$baro_idx);
+$obj_baro_res	= json_decode($obj_baro,true);
+$baro		= ($obj_baro_res['result'][0]['Barometer']*10);
 if($baro < 10000){
 	$bzero = '0';
 }else{
@@ -92,22 +122,15 @@ if($tempi != ''){
    $internal_temp_label = " Int.T: ".$tempi."C ";
 }
 
-$temp_label = @$zero.$temp;
-
-$humi_label = '';
-if($humi != ''){
-   $humi_label = "h".$humi;
+$temp_labe = '...';
+if($temp != ''){
+   $temp_label = $zero.$temp;
 }
 
-$baro_label = '';
-if($baro != ''){
-   $baro_label = "b".$bzero.$baro;
-}
-
-if(($temp == '' )){
+if($temp == '' and $humi == ''){
    echo "!".$lat."/".$lon."_".$err_comment."\n";
 }else{
-   echo "!".$lat."/".$lon."_.../...g...t".$temp_label.$humi_label.$baro_label.$internal_temp_label." ".$comment."\n";
+   echo "!".$lat."/".$lon."_.../...g...t".$temp_label."h".$humi."b".$bzero.$baro." ".$internal_temp_label.$bat_voltage_label.$pm25_label."".$pm10_label.$comment."\n";
 }
 // EOF
 ?>
